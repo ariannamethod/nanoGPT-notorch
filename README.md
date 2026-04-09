@@ -19,7 +19,7 @@
 
 you know nanoGPT? Karpathy's beautiful, minimal GPT trainer? the one that reproduces GPT-2 on OpenWebText in 300 lines?
 
-we took it. we ripped out Adam. we replaced it with **Chuck** — a self-aware optimizer that doesn't just descend gradients, it *understands* them. 9 levels of awareness. persistent memory. per-layer damping. macro patience. noise injection when stuck.
+now nanoGPT is liberated from PyTorch bullshit. we took it. we ripped out Adam. we replaced it with **Chuck** — a self-aware optimizer that doesn't just descend gradients, it *understands* them. 9 levels of awareness. persistent memory. per-layer damping. macro patience. noise injection when stuck.
 
 and we brought **notorch** — a complete neural network framework in pure C. no pip. no conda. no 2.7 GB of existential dread. just `cc notorch.c -o notorch -lm` and you have tensors, autograd, attention, and three optimizers including Chuck.
 
