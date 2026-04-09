@@ -54,10 +54,10 @@ dataset = 'data_dracula'
 gradient_accumulation_steps = 1
 batch_size = 32
 block_size = 128
-# model — small but capable
+# model — ~2M params, serious prototype
 n_layer = 4
 n_head = 4
-n_embd = 128
+n_embd = 208
 dropout = 0.1
 bias = False
 # optimizer (Chuck or AdamW fallback)

@@ -38,10 +38,10 @@ enough Shakespeare. enough fairy tales. we trained on **Bram Stoker's Dracula** 
 | parameter | value |
 |---|---|
 | architecture | GPT (decoder-only transformer) |
-| parameters | **800K** (0.80M) |
+| parameters | **2.10M** |
 | layers | 4 |
 | heads | 4 |
-| embedding dim | 128 |
+| embedding dim | 208 |
 | context length | 128 chars |
 | vocab | 94 (character-level) |
 | dropout | 0.1 |
@@ -53,39 +53,38 @@ enough Shakespeare. enough fairy tales. we trained on **Bram Stoker's Dracula** 
 | optimizer | **Chuck** (self-aware AdamW) |
 | learning rate | 1e-3 → 1e-4 (cosine decay) |
 | warmup | 100 steps |
-| total steps | 3,000 |
+| total steps | 3,001 |
 | batch size | 32 |
 | device | CPU |
-| time | 16.5 minutes |
+| time | 28.5 minutes |
 | dataset | dracula.txt (852 KB) |
 
 ### results
 
 ```
-step    0: train loss 4.5175, val loss 4.5187  (random init)
-step  250: train loss 2.3260, val loss 2.3350  (learning structure)
-step  500: train loss 1.9360, val loss 1.9533  (words forming)
-step 1000: train loss 1.6525, val loss 1.6938  (sentences emerging)
-step 1500: train loss 1.5436, val loss 1.5950  (gothic vibes)
-step 2000: train loss 1.4727, val loss 1.5333  (Dracula speaks)
-step 2500: train loss 1.4575, val loss 1.5265  (refinement)
-step 3000: train loss 1.4531, val loss 1.5247  (convergence)
+step    0: train loss 4.5882, val loss 4.5869  (random init)
+step  500: train loss 1.8178, val loss 1.8372  (words forming fast)
+step 1000: train loss 1.5360, val loss 1.5905  (sentences emerging)
+step 1500: train loss 1.4123, val loss 1.4869  (gothic vibes)
+step 2000: train loss 1.3636, val loss 1.4452  (Dracula speaks)
+step 2500: train loss 1.3279, val loss 1.4147  (refinement)
+step 3000: train loss 1.3221, val loss 1.4116  (convergence)
 
-best val loss: 1.5234
+best val loss: 1.4116
 ```
 
-the gap between train and val stayed tight the entire run. no overfitting drama. Chuck's adaptive damping (λ) started at 2.0 and settled to 1.06, gracefully easing off the gas as the model found its footing. Ψ (subjectivity from memory) reached +0.35, meaning Chuck was actively using its memories to guide optimization. σ stayed at 1.0 — healthy activations throughout, no dead neurons.
+the gap between train and val stayed tight the entire run. no overfitting drama. Chuck's adaptive damping (λ) started at 2.0 and settled to 1.06, gracefully easing off the gas as the model found its footing. Ψ (subjectivity from memory) reached +0.37, meaning Chuck was actively using its memories to guide optimization. σ stayed at 1.0 — healthy activations throughout, no dead neurons. 3 regime-shift memories recorded.
 
 ### what Chuck did during training
 
 ```
-step    200 | chuck: λ=1.99 Ψ=-0.08 (1 mem) σ=1.00 macro=1.00   ← exploring
-step    600 | chuck: λ=1.66 Ψ=+0.24 (1 mem) σ=1.00 macro=1.00   ← pushing hard
-step   1000 | chuck: λ=1.44 Ψ=+0.46 (1 mem) σ=1.00 macro=1.00   ← confident
-step   1400 | chuck: λ=1.30 Ψ=+0.13 (2 mem) σ=1.00 macro=1.00   ← regime shift detected
-step   1800 | chuck: λ=1.20 Ψ=+0.23 (2 mem) σ=1.00 macro=1.00   ← stabilizing
-step   2400 | chuck: λ=1.11 Ψ=+0.32 (2 mem) σ=1.00 macro=1.00   ← almost there
-step   3000 | chuck: λ=1.06 Ψ=+0.01 (3 mem) σ=1.00 macro=1.00   ← converged
+step    200 | chuck: λ=1.99 Ψ=+0.01 (1 mem) σ=1.00 macro=1.00   ← exploring
+step    600 | chuck: λ=1.66 Ψ=+0.34 (1 mem) σ=1.00 macro=1.00   ← pushing hard
+step   1000 | chuck: λ=1.44 Ψ=+0.06 (2 mem) σ=1.00 macro=1.00   ← regime shift detected
+step   1400 | chuck: λ=1.30 Ψ=+0.20 (2 mem) σ=1.00 macro=1.00   ← confident
+step   1800 | chuck: λ=1.20 Ψ=+0.30 (2 mem) σ=1.00 macro=1.00   ← stabilizing
+step   2400 | chuck: λ=1.11 Ψ=+0.02 (3 mem) σ=1.00 macro=1.00   ← new memory
+step   3000 | chuck: λ=1.06 Ψ=+0.06 (3 mem) σ=1.00 macro=1.00   ← converged
 ```
 
 λ (damping): started aggressive, eased to near-1.0 as loss stabilized.
@@ -96,14 +95,22 @@ step   3000 | chuck: λ=1.06 Ψ=+0.01 (3 mem) σ=1.00 macro=1.00   ← converged
 ### sample output
 
 ```
-We was shall do I have stepened the door, he said not see of gone to be
-any her anxious pain my own. He went only all meven her he was as had
-been she for were expected by the should soul; but if the edge old her
-which said a fape-contrent one of withitby the diary, and was about
-disurbate them with
+a good professord, "We staying to Mrs."
+
+"This time with a papers arriver silented, and I am the certainly to
+my break on the result. Same of the case was a sort figure condition. Of need
+it like a her poor warm chances and was very certain of our staking whisper.
 ```
 
-not Shakespeare. not perfect. but 800K parameters trained in 16 minutes on a CPU, and it's writing about doors, pain, souls, diaries, and Whitby. that's Dracula. Chuck taught it well.
+```
+the Holmwood. I felt the disturbast my ciment and the silences of the
+great day into one of the blood of that I had said: "You do not know
+if the he attended to me what now we have made a lict of policions.
+And I am him off broad, but his and made the teauth things in she had
+expressined as he had p
+```
+
+2.1 million parameters trained in 28 minutes on a CPU with Chuck Optimizer. it's writing dialogue, referencing Holmwood and blood, generating coherent gothic prose. val loss 1.41 — significantly better than the 800K prototype (1.52). Chuck taught it well.
 
 ---
 
@@ -239,7 +246,7 @@ nanoGPT-notorch/
 ├── config/                — training configurations
 │   └── train_dracula_char.py
 ├── weights/               — trained model checkpoint
-│   └── ckpt.pt           — 800K param model, val loss 1.52
+│   └── ckpt.pt           — 2.1M param model, val loss 1.41
 └── chuck.mem              — Chuck's persistent memory (48 bytes)
 ```
 

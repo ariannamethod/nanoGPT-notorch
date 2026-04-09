@@ -56,7 +56,7 @@ else:
 gptconf = GPTConfig(
     block_size = block_size,
     vocab_size = 94,
-    n_layer = 4, n_head = 4, n_embd = 128,
+    n_layer = 4, n_head = 4, n_embd = 208,
     dropout = 0,
     bias = bias,
 )

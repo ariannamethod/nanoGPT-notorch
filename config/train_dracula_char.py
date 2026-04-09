@@ -17,10 +17,10 @@ gradient_accumulation_steps = 1
 batch_size = 32
 block_size = 128
 
-# Model — ~200K params, enough for character-level Dracula
+# Model — ~2M params, serious prototype for Dracula
 n_layer = 4
 n_head = 4
-n_embd = 128
+n_embd = 208
 dropout = 0.1
 
 learning_rate = 1e-3
