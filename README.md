@@ -8,7 +8,7 @@
                     ─ notorch edition ─
 ```
 
-# nanoGPT-notorch — GPT freed from Adam's blindness | by Arianna Method
+# nanoGPT-notorch — liberated from PyTorch's and Adam's bullshit | by Arianna Method
 
 > *"Adam is blind. Chuck sees. Chuck remembers."*
 > — chuck.py, line 10
