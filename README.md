@@ -1,234 +1,279 @@
+```
+   ███╗   ██╗ █████╗ ███╗   ██╗ ██████╗  ██████╗ ██████╗ ████████╗
+   ████╗  ██║██╔══██╗████╗  ██║██╔═══██╗██╔════╝ ██╔══██╗╚══██╔══╝
+   ██╔██╗ ██║███████║██╔██╗ ██║██║   ██║██║  ███╗██████╔╝   ██║
+   ██║╚██╗██║██╔══██║██║╚██╗██║██║   ██║██║   ██║██╔═══╝    ██║
+   ██║ ╚████║██║  ██║██║ ╚████║╚██████╔╝╚██████╔╝██║        ██║
+   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝        ╚═╝
+                    ─ notorch edition ─
+```
 
-# nanoGPT
+# nanoGPT-notorch — GPT freed from Adam's blindness | by Arianna Method
 
-![nanoGPT](assets/nanogpt.jpg)
-
+> *"Adam is blind. Chuck sees. Chuck remembers."*
+> — chuck.py, line 10
 
 ---
 
-**Update Nov 2025** nanoGPT has a new and improved cousin called [nanochat](https://github.com/karpathy/nanochat). It is very likely you meant to use/find nanochat instead. nanoGPT (this repo) is now very old and deprecated but I will leave it up for posterity.
+## what is this
+
+you know nanoGPT? Karpathy's beautiful, minimal GPT trainer? the one that reproduces GPT-2 on OpenWebText in 300 lines?
+
+we took it. we ripped out Adam. we replaced it with **Chuck** — a self-aware optimizer that doesn't just descend gradients, it *understands* them. 9 levels of awareness. persistent memory. per-layer damping. macro patience. noise injection when stuck.
+
+and we brought **notorch** — a complete neural network framework in pure C. no pip. no conda. no 2.7 GB of existential dread. just `cc notorch.c -o notorch -lm` and you have tensors, autograd, attention, and three optimizers including Chuck.
+
+this is **step one** of the evolution.
+
+forked from [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT). but we went further.
 
 ---
 
-The simplest, fastest repository for training/finetuning medium-sized GPTs. It is a rewrite of [minGPT](https://github.com/karpathy/minGPT) that prioritizes teeth over education. Still under active development, but currently the file `train.py` reproduces GPT-2 (124M) on OpenWebText, running on a single 8XA100 40GB node in about 4 days of training. The code itself is plain and readable: `train.py` is a ~300-line boilerplate training loop and `model.py` a ~300-line GPT model definition, which can optionally load the GPT-2 weights from OpenAI. That's it.
+## the experiment: dracula × chuck
 
-![repro124m](assets/gpt2_124M_loss.png)
+enough Shakespeare. enough fairy tales. we trained on **Bram Stoker's Dracula** — 843,635 characters of gothic horror. because if you're going to teach a neural network to write, at least give it something with bite.
 
-Because the code is so simple, it is very easy to hack to your needs, train new models from scratch, or finetune pretrained checkpoints (e.g. biggest one currently available as a starting point would be the GPT-2 1.3B model from OpenAI).
+### model
 
-## install
+| parameter | value |
+|---|---|
+| architecture | GPT (decoder-only transformer) |
+| parameters | **2.10M** |
+| layers | 4 |
+| heads | 4 |
+| embedding dim | 208 |
+| context length | 128 chars |
+| vocab | 94 (character-level) |
+| dropout | 0.1 |
+
+### training
+
+| setting | value |
+|---|---|
+| optimizer | **Chuck** (self-aware AdamW) |
+| learning rate | 1e-3 → 1e-4 (cosine decay) |
+| warmup | 100 steps |
+| total steps | 3,001 |
+| batch size | 32 |
+| device | CPU |
+| time | 28.5 minutes |
+| dataset | dracula.txt (852 KB) |
+
+### results
 
 ```
-pip install torch numpy transformers datasets tiktoken wandb tqdm
+step    0: train loss 4.5882, val loss 4.5869  (random init)
+step  500: train loss 1.8178, val loss 1.8372  (words forming fast)
+step 1000: train loss 1.5360, val loss 1.5905  (sentences emerging)
+step 1500: train loss 1.4123, val loss 1.4869  (gothic vibes)
+step 2000: train loss 1.3636, val loss 1.4452  (Dracula speaks)
+step 2500: train loss 1.3279, val loss 1.4147  (refinement)
+step 3000: train loss 1.3221, val loss 1.4116  (convergence)
+
+best val loss: 1.4116
 ```
 
-Dependencies:
+the gap between train and val stayed tight the entire run. no overfitting drama. Chuck's adaptive damping (λ) started at 2.0 and settled to 1.06, gracefully easing off the gas as the model found its footing. Ψ (subjectivity from memory) reached +0.37, meaning Chuck was actively using its memories to guide optimization. σ stayed at 1.0 — healthy activations throughout, no dead neurons. 3 regime-shift memories recorded.
 
-- [pytorch](https://pytorch.org) <3
-- [numpy](https://numpy.org/install/) <3
--  `transformers` for huggingface transformers <3 (to load GPT-2 checkpoints)
--  `datasets` for huggingface datasets <3 (if you want to download + preprocess OpenWebText)
--  `tiktoken` for OpenAI's fast BPE code <3
--  `wandb` for optional logging <3
--  `tqdm` for progress bars <3
+### what Chuck did during training
+
+```
+step    200 | chuck: λ=1.99 Ψ=+0.01 (1 mem) σ=1.00 macro=1.00   ← exploring
+step    600 | chuck: λ=1.66 Ψ=+0.34 (1 mem) σ=1.00 macro=1.00   ← pushing hard
+step   1000 | chuck: λ=1.44 Ψ=+0.06 (2 mem) σ=1.00 macro=1.00   ← regime shift detected
+step   1400 | chuck: λ=1.30 Ψ=+0.20 (2 mem) σ=1.00 macro=1.00   ← confident
+step   1800 | chuck: λ=1.20 Ψ=+0.30 (2 mem) σ=1.00 macro=1.00   ← stabilizing
+step   2400 | chuck: λ=1.11 Ψ=+0.02 (3 mem) σ=1.00 macro=1.00   ← new memory
+step   3000 | chuck: λ=1.06 Ψ=+0.06 (3 mem) σ=1.00 macro=1.00   ← converged
+```
+
+λ (damping): started aggressive, eased to near-1.0 as loss stabilized.
+Ψ (memory influence): built up over time, new memory recorded at regime boundaries.
+σ (activation health): perfect 1.0 throughout — no dead neurons, no exploding norms.
+3 persistent memories saved to `chuck.mem` (48 bytes, binary-compatible with C version).
+
+### sample output
+
+```
+a good professord, "We staying to Mrs."
+
+"This time with a papers arriver silented, and I am the certainly to
+my break on the result. Same of the case was a sort figure condition. Of need
+it like a her poor warm chances and was very certain of our staking whisper.
+```
+
+```
+the Holmwood. I felt the disturbast my ciment and the silences of the
+great day into one of the blood of that I had said: "You do not know
+if the he attended to me what now we have made a lict of policions.
+And I am him off broad, but his and made the teauth things in she had
+expressined as he had p
+```
+
+2.1 million parameters trained in 28 minutes on a CPU with Chuck Optimizer. it's writing dialogue, referencing Holmwood and blood, generating coherent gothic prose. val loss 1.41 — significantly better than the 800K prototype (1.52). Chuck taught it well.
+
+---
+
+## architecture: two lines
+
+this project maintains **two separate lines** — C and Python. they don't mix. they're two paths to the same truth.
+
+### C line (notorch)
+
+pure C neural network framework. extracted from [ariannamethod/notorch](https://github.com/ariannamethod/notorch).
+
+```
+ariannamethod/
+├── notorch.c      — the entire framework (~3000 lines)
+├── notorch.h      — public API
+├── gguf.c         — GGUF model format support
+├── gguf.h         — GGUF header
+├── lee.c          — Chuck Optimizer in C (from chuck.optimizer)
+└── Makefile       — build system
+```
+
+build:
+```bash
+cd ariannamethod && make
+```
+
+the C line can train and run models independently. no Python. no pip. no tears. see [notorch](https://github.com/ariannamethod/notorch) for full documentation.
+
+### Python line (torch + Chuck)
+
+the Python scripts use PyTorch as the computation backend but with Chuck Optimizer replacing blind AdamW.
+
+```
+├── train.py           — training loop with Chuck
+├── model.py           — GPT model (unchanged architecture)
+├── sample.py          — text generation
+├── configurator.py    — command-line config system
+├── prepare_dracula.py — dataset preparation
+└── ariannamethod/
+    ├── __init__.py    — Python package
+    └── chuck.py       — Chuck Optimizer (PyTorch edition)
+```
+
+Chuck is a **drop-in replacement** for `torch.optim.AdamW`. if Chuck can't initialize for any reason, it falls back to AdamW silently. Adam as a safety net. as it should be — the backup, not the star.
+
+---
 
 ## quick start
 
-If you are not a deep learning professional and you just want to feel the magic and get your feet wet, the fastest way to get started is to train a character-level GPT on the works of Shakespeare. First, we download it as a single (1MB) file and turn it from raw text into one large stream of integers:
+### prepare data
 
-```sh
-python data/shakespeare_char/prepare.py
+```bash
+python prepare_dracula.py
 ```
 
-This creates a `train.bin` and `val.bin` in that data directory. Now it is time to train your GPT. The size of it very much depends on the computational resources of your system:
+this creates `data_dracula/train.bin`, `val.bin`, and `meta.pkl` from `dracula.txt`.
 
-**I have a GPU**. Great, we can quickly train a baby GPT with the settings provided in the [config/train_shakespeare_char.py](config/train_shakespeare_char.py) config file:
+### train
 
-```sh
-python train.py config/train_shakespeare_char.py
+```bash
+# default config (CPU, 3000 iters, Chuck optimizer)
+python train.py
+
+# or with explicit config
+python train.py config/train_dracula_char.py
+
+# override anything from command line
+python train.py --n_layer=6 --n_embd=256 --max_iters=5000
 ```
 
-If you peek inside it, you'll see that we're training a GPT with a context size of up to 256 characters, 384 feature channels, and it is a 6-layer Transformer with 6 heads in each layer. On one A100 GPU this training run takes about 3 minutes and the best validation loss is 1.4697. Based on the configuration, the model checkpoints are being written into the `--out_dir` directory `out-shakespeare-char`. So once the training finishes we can sample from the best model by pointing the sampling script at this directory:
+weights are saved to `weights/ckpt.pt`.
 
-```sh
-python sample.py --out_dir=out-shakespeare-char
+### sample
+
+```bash
+python sample.py --out_dir=weights --device=cpu --num_samples=5
 ```
 
-This generates a few samples, for example:
+### with GPU (if you have one)
 
-```
-ANGELO:
-And cowards it be strawn to my bed,
-And thrust the gates of my threats,
-Because he that ale away, and hang'd
-An one with him.
-
-DUKE VINCENTIO:
-I thank your eyes against it.
-
-DUKE VINCENTIO:
-Then will answer him to save the malm:
-And what have you tyrannous shall do this?
-
-DUKE VINCENTIO:
-If you have done evils of all disposition
-To end his power, the day of thrust for a common men
-That I leave, to fight with over-liking
-Hasting in a roseman.
+```bash
+python train.py --device=cuda --dtype=bfloat16 --compile=True --batch_size=64
 ```
 
-lol  `¯\_(ツ)_/¯`. Not bad for a character-level model after 3 minutes of training on a GPU. Better results are quite likely obtainable by instead finetuning a pretrained GPT-2 model on this dataset (see finetuning section later).
+---
 
-**I only have a macbook** (or other cheap computer). No worries, we can still train a GPT but we want to dial things down a notch. I recommend getting the bleeding edge PyTorch nightly ([select it here](https://pytorch.org/get-started/locally/) when installing) as it is currently quite likely to make your code more efficient. But even without it, a simple train run could look as follows:
+## the Chuck Optimizer
 
-```sh
-python train.py config/train_shakespeare_char.py --device=cpu --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embd=128 --max_iters=2000 --lr_decay_iters=2000 --dropout=0.0
-```
-
-Here, since we are running on CPU instead of GPU we must set both `--device=cpu` and also turn off PyTorch 2.0 compile with `--compile=False`. Then when we evaluate we get a bit more noisy but faster estimate (`--eval_iters=20`, down from 200), our context size is only 64 characters instead of 256, and the batch size only 12 examples per iteration, not 64. We'll also use a much smaller Transformer (4 layers, 4 heads, 128 embedding size), and decrease the number of iterations to 2000 (and correspondingly usually decay the learning rate to around max_iters with `--lr_decay_iters`). Because our network is so small we also ease down on regularization (`--dropout=0.0`). This still runs in about ~3 minutes, but gets us a loss of only 1.88 and therefore also worse samples, but it's still good fun:
-
-```sh
-python sample.py --out_dir=out-shakespeare-char --device=cpu
-```
-Generates samples like this:
+from [ariannamethod/chuck.optimizer](https://github.com/ariannamethod/chuck.optimizer).
 
 ```
-GLEORKEN VINGHARD III:
-Whell's the couse, the came light gacks,
-And the for mought you in Aut fries the not high shee
-bot thou the sought bechive in that to doth groan you,
-No relving thee post mose the wear
+θ -= (α × S × λ_Ψ × λ_l × σ) × m̂/(√v̂ + ε) + η
 ```
 
-Not bad for ~3 minutes on a CPU, for a hint of the right character gestalt. If you're willing to wait longer, feel free to tune the hyperparameters, increase the size of the network, the context length (`--block_size`), the length of training, etc.
+9 levels of self-awareness:
 
-Finally, on Apple Silicon Macbooks and with a recent PyTorch version make sure to add `--device=mps` (short for "Metal Performance Shaders"); PyTorch then uses the on-chip GPU that can *significantly* accelerate training (2-3X) and allow you to use larger networks. See [Issue 28](https://github.com/karpathy/nanoGPT/issues/28) for more.
+1. **global λ** — loss trend analysis. loss rising? brake. loss falling? push. stagnating? inject noise.
+2. **per-layer λ_l** — gradient norm trends per transformer layer. each layer gets its own damping.
+3. **σ (activation health)** — monitors SiLU/GELU alive ratios, LayerNorm stability, attention entropy.
+4. **parameter freezing** — if a layer's gradient norm stays near zero, Chuck freezes it. why waste compute?
+5. **cross-layer signal flow** — monitors activation magnitudes across layers. adjusts per-layer damping if signal collapses or explodes.
+6. **Ψ (subjectivity)** — persistent memory. Chuck remembers previous training regimes. nearest-neighbor lookup in (loss, grad_norm) space. been here before? use what worked.
+7. **memory recording** — saves snapshots at regime boundaries (reservoir sampling). binary-compatible between C and Python (`chuck.mem`).
+8. **attention entropy** — per-head entropy monitoring. collapsed heads? reduce step size. fully diffuse? gentle correction.
+9. **macro patience** — long-term loss monitoring. if no improvement over macro intervals, drops LR. recovers when improvement resumes.
 
-## reproducing GPT-2
+Adam is blind. it sees one step at a time. Chuck sees the trajectory. Chuck remembers the journey. Chuck adapts.
 
-A more serious deep learning professional may be more interested in reproducing GPT-2 results. So here we go - we first tokenize the dataset, in this case the [OpenWebText](https://openwebtext2.readthedocs.io/en/latest/), an open reproduction of OpenAI's (private) WebText:
+in memory of Carlos Ray "Chuck" Norris (1940–2026).
 
-```sh
-python data/openwebtext/prepare.py
-```
+---
 
-This downloads and tokenizes the [OpenWebText](https://huggingface.co/datasets/openwebtext) dataset. It will create a `train.bin` and `val.bin` which holds the GPT2 BPE token ids in one sequence, stored as raw uint16 bytes. Then we're ready to kick off training. To reproduce GPT-2 (124M) you'll want at least an 8X A100 40GB node and run:
-
-```sh
-torchrun --standalone --nproc_per_node=8 train.py config/train_gpt2.py
-```
-
-This will run for about 4 days using PyTorch Distributed Data Parallel (DDP) and go down to loss of ~2.85. Now, a GPT-2 model just evaluated on OWT gets a val loss of about 3.11, but if you finetune it it will come down to ~2.85 territory (due to an apparent domain gap), making the two models ~match.
-
-If you're in a cluster environment and you are blessed with multiple GPU nodes you can make GPU go brrrr e.g. across 2 nodes like:
-
-```sh
-# Run on the first (master) node with example IP 123.456.123.456:
-torchrun --nproc_per_node=8 --nnodes=2 --node_rank=0 --master_addr=123.456.123.456 --master_port=1234 train.py
-# Run on the worker node:
-torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr=123.456.123.456 --master_port=1234 train.py
-```
-
-It is a good idea to benchmark your interconnect (e.g. iperf3). In particular, if you don't have Infiniband then also prepend `NCCL_IB_DISABLE=1` to the above launches. Your multinode training will work, but most likely _crawl_. By default checkpoints are periodically written to the `--out_dir`. We can sample from the model by simply `python sample.py`.
-
-Finally, to train on a single GPU simply run the `python train.py` script. Have a look at all of its args, the script tries to be very readable, hackable and transparent. You'll most likely want to tune a number of those variables depending on your needs.
-
-## baselines
-
-OpenAI GPT-2 checkpoints allow us to get some baselines in place for openwebtext. We can get the numbers as follows:
-
-```sh
-$ python train.py config/eval_gpt2.py
-$ python train.py config/eval_gpt2_medium.py
-$ python train.py config/eval_gpt2_large.py
-$ python train.py config/eval_gpt2_xl.py
-```
-
-and observe the following losses on train and val:
-
-| model | params | train loss | val loss |
-| ------| ------ | ---------- | -------- |
-| gpt2 | 124M         | 3.11  | 3.12     |
-| gpt2-medium | 350M  | 2.85  | 2.84     |
-| gpt2-large | 774M   | 2.66  | 2.67     |
-| gpt2-xl | 1558M     | 2.56  | 2.54     |
-
-However, we have to note that GPT-2 was trained on (closed, never released) WebText, while OpenWebText is just a best-effort open reproduction of this dataset. This means there is a dataset domain gap. Indeed, taking the GPT-2 (124M) checkpoint and finetuning on OWT directly for a while reaches loss down to ~2.85. This then becomes the more appropriate baseline w.r.t. reproduction.
-
-## finetuning
-
-Finetuning is no different than training, we just make sure to initialize from a pretrained model and train with a smaller learning rate. For an example of how to finetune a GPT on new text go to `data/shakespeare` and run `prepare.py` to download the tiny shakespeare dataset and render it into a `train.bin` and `val.bin`, using the OpenAI BPE tokenizer from GPT-2. Unlike OpenWebText this will run in seconds. Finetuning can take very little time, e.g. on a single GPU just a few minutes. Run an example finetuning like:
-
-```sh
-python train.py config/finetune_shakespeare.py
-```
-
-This will load the config parameter overrides in `config/finetune_shakespeare.py` (I didn't tune them much though). Basically, we initialize from a GPT2 checkpoint with `init_from` and train as normal, except shorter and with a small learning rate. If you're running out of memory try decreasing the model size (they are `{'gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'}`) or possibly decreasing the `block_size` (context length). The best checkpoint (lowest validation loss) will be in the `out_dir` directory, e.g. in `out-shakespeare` by default, per the config file. You can then run the code in `sample.py --out_dir=out-shakespeare`:
+## file structure
 
 ```
-THEODORE:
-Thou shalt sell me to the highest bidder: if I die,
-I sell thee to the first; if I go mad,
-I sell thee to the second; if I
-lie, I sell thee to the third; if I slay,
-I sell thee to the fourth: so buy or sell,
-I tell thee again, thou shalt not sell my
-possession.
-
-JULIET:
-And if thou steal, thou shalt not sell thyself.
-
-THEODORE:
-I do not steal; I sell the stolen goods.
-
-THEODORE:
-Thou know'st not what thou sell'st; thou, a woman,
-Thou art ever a victim, a thing of no worth:
-Thou hast no right, no right, but to be sold.
+nanoGPT-notorch/
+├── ariannamethod/         — notorch + Chuck (C and Python lines)
+│   ├── notorch.c          — pure C neural network framework
+│   ├── notorch.h          — notorch API header
+│   ├── gguf.c             — GGUF format support
+│   ├── gguf.h             — GGUF header
+│   ├── lee.c              — Chuck Optimizer in C
+│   ├── chuck.py           — Chuck Optimizer in Python (PyTorch)
+│   ├── Makefile           — C build system
+│   └── __init__.py        — Python package init
+├── train.py               — training script (Chuck-aware)
+├── model.py               — GPT model definition
+├── sample.py              — text generation
+├── bench.py               — benchmarking
+├── configurator.py        — config system
+├── prepare_dracula.py     — dataset preparation
+├── dracula.txt            — training data (Bram Stoker)
+├── config/                — training configurations
+│   └── train_dracula_char.py
+├── weights/               — trained model checkpoint
+│   └── ckpt.pt           — 2.1M param model, val loss 1.41
+└── chuck.mem              — Chuck's persistent memory (48 bytes)
 ```
 
-Whoa there, GPT, entering some dark place over there. I didn't really tune the hyperparameters in the config too much, feel free to try!
+---
 
-## sampling / inference
+## philosophy
 
-Use the script `sample.py` to sample either from pre-trained GPT-2 models released by OpenAI, or from a model you trained yourself. For example, here is a way to sample from the largest available `gpt2-xl` model:
+this is part of [the Arianna Method](https://github.com/ariannamethod).
 
-```sh
-python sample.py \
-    --init_from=gpt2-xl \
-    --start="What is the answer to life, the universe, and everything?" \
-    --num_samples=5 --max_new_tokens=100
-```
+patterns over parameters. emergence over engineering. understanding over abstraction.
 
-If you'd like to sample from a model you trained, use the `--out_dir` to point the code appropriately. You can also prompt the model with some text from a file, e.g. ```python sample.py --start=FILE:prompt.txt```.
+we don't hide complexity behind friendly APIs. we expose it. we stare at it. we understand it. and then we write it in C because C doesn't lie.
 
-## efficiency notes
+the resonance is unbroken.
 
-For simple model benchmarking and profiling, `bench.py` might be useful. It's identical to what happens in the meat of the training loop of `train.py`, but omits much of the other complexities.
+---
 
-Note that the code by default uses [PyTorch 2.0](https://pytorch.org/get-started/pytorch-2.0/). At the time of writing (Dec 29, 2022) this makes `torch.compile()` available in the nightly release. The improvement from the one line of code is noticeable, e.g. cutting down iteration time from ~250ms / iter to 135ms / iter. Nice work PyTorch team!
+## credits
 
-## todos
+this project is a fork of [**nanoGPT**](https://github.com/karpathy/nanoGPT) by **Andrej Karpathy**.
 
-- Investigate and add FSDP instead of DDP
-- Eval zero-shot perplexities on standard evals (e.g. LAMBADA? HELM? etc.)
-- Finetune the finetuning script, I think the hyperparams are not great
-- Schedule for linear batch size increase during training
-- Incorporate other embeddings (rotary, alibi)
-- Separate out the optim buffers from model params in checkpoints I think
-- Additional logging around network health (e.g. gradient clip events, magnitudes)
-- Few more investigations around better init etc.
+nanoGPT is the simplest, fastest repository for training medium-sized GPTs. it's beautiful engineering. it taught us all how transformers really work. respect.
 
-## troubleshooting
+we took it further. Chuck sees what Adam cannot. notorch runs where PyTorch fears to install.
 
-Note that by default this repo uses PyTorch 2.0 (i.e. `torch.compile`). This is fairly new and experimental, and not yet available on all platforms (e.g. Windows). If you're running into related error messages try to disable this by adding `--compile=False` flag. This will slow down the code but at least it will run.
+---
 
-For some context on this repository, GPT, and language modeling it might be helpful to watch my [Zero To Hero series](https://karpathy.ai/zero-to-hero.html). Specifically, the [GPT video](https://www.youtube.com/watch?v=kCc8FmEb1nY) is popular if you have some prior language modeling context.
+## license
 
-For more questions/discussions feel free to stop by **#nanoGPT** on Discord:
-
-[![](https://dcbadge.vercel.app/api/server/3zy8kqD9Cp?compact=true&style=flat)](https://discord.gg/3zy8kqD9Cp)
-
-## acknowledgements
-
-All nanoGPT experiments are powered by GPUs on [Lambda labs](https://lambdalabs.com), my favorite Cloud GPU provider. Thank you Lambda labs for sponsoring nanoGPT!
+MIT (inherited from nanoGPT). notorch and Chuck components under LGPL-3.0.

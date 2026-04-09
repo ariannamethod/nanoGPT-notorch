@@ -1,10 +1,16 @@
 """
 Full definition of a GPT Language Model, all of it in this single file.
+
+Originally from nanoGPT by Andrej Karpathy.
+Now evolved with notorch philosophy and Chuck Optimizer.
+
 References:
 1) the official GPT-2 TensorFlow implementation released by OpenAI:
 https://github.com/openai/gpt-2/blob/master/src/model.py
 2) huggingface/transformers PyTorch implementation:
 https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt2/modeling_gpt2.py
+3) notorch — neural networks in pure C (github.com/ariannamethod/notorch)
+4) Chuck Optimizer — self-aware AdamW (github.com/ariannamethod/chuck.optimizer)
 """
 
 import math
@@ -14,6 +20,13 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+# Chuck Optimizer — replaces blind Adam with self-aware optimization
+try:
+    from ariannamethod import ChuckOptimizer, ChuckMonitor, chuck_params
+    CHUCK_AVAILABLE = True
+except ImportError:
+    CHUCK_AVAILABLE = False
 
 class LayerNorm(nn.Module):
     """ LayerNorm but with an optional bias. PyTorch doesn't support simply bias=False """
@@ -277,7 +290,27 @@ class GPT(nn.Module):
         num_nodecay_params = sum(p.numel() for p in nodecay_params)
         print(f"num decayed parameter tensors: {len(decay_params)}, with {num_decay_params:,} parameters")
         print(f"num non-decayed parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters")
-        # Create AdamW optimizer and use the fused version if it is available
+
+        # Try Chuck Optimizer first — self-aware AdamW replacement
+        if CHUCK_AVAILABLE:
+            try:
+                monitor = ChuckMonitor(self)
+                chuck_groups = chuck_params(self, lr=learning_rate,
+                                           weight_decay=weight_decay)
+                optimizer = ChuckOptimizer(
+                    chuck_groups,
+                    lr=learning_rate,
+                    betas=betas,
+                    weight_decay=weight_decay,
+                    monitor=monitor,
+                    verbose=200,
+                )
+                print("using Chuck Optimizer (self-aware AdamW)")
+                return optimizer
+            except Exception as e:
+                print(f"Chuck failed to initialize ({e}), falling back to AdamW")
+
+        # Fallback: Create AdamW optimizer and use the fused version if it is available
         fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
         use_fused = fused_available and device_type == 'cuda'
         extra_args = dict(fused=True) if use_fused else dict()
