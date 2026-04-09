@@ -9,8 +9,13 @@ import os
 import pickle
 from contextlib import nullcontext
 import torch
-import tiktoken
 from model import GPTConfig, GPT
+
+try:
+    import tiktoken
+    TIKTOKEN_AVAILABLE = True
+except ImportError:
+    TIKTOKEN_AVAILABLE = False
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
@@ -71,11 +76,15 @@ if load_meta:
     encode = lambda s: [stoi[c] for c in s]
     decode = lambda l: ''.join([itos[i] for i in l])
 else:
-    # ok let's assume gpt-2 encodings by default
-    print("No meta.pkl found, assuming GPT-2 encodings...")
-    enc = tiktoken.get_encoding("gpt2")
-    encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
-    decode = lambda l: enc.decode(l)
+    if TIKTOKEN_AVAILABLE:
+        # ok let's assume gpt-2 encodings by default
+        print("No meta.pkl found, assuming GPT-2 encodings...")
+        enc = tiktoken.get_encoding("gpt2")
+        encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
+        decode = lambda l: enc.decode(l)
+    else:
+        print("No meta.pkl found and tiktoken not available. Cannot decode.")
+        raise RuntimeError("Install tiktoken or provide a dataset with meta.pkl")
 
 # encode the beginning of the prompt
 if start.startswith('FILE:'):
