@@ -52,12 +52,12 @@ wandb_run_name = 'dracula-chuck'
 # data
 dataset = 'data_dracula'
 gradient_accumulation_steps = 1
-batch_size = 32
-block_size = 128
-# model — ~2M params, serious prototype
-n_layer = 4
-n_head = 4
-n_embd = 208
+batch_size = 16
+block_size = 256
+# model — ~10.8M params, Karpathy-scale proof of concept
+n_layer = 6
+n_head = 6
+n_embd = 384
 dropout = 0.1
 bias = False
 # optimizer (Chuck or AdamW fallback)

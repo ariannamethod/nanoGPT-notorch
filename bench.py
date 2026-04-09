@@ -11,7 +11,7 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 batch_size = 12
-block_size = 128
+block_size = 256
 bias = False
 real_data = True
 seed = 1337
@@ -56,7 +56,7 @@ else:
 gptconf = GPTConfig(
     block_size = block_size,
     vocab_size = 94,
-    n_layer = 4, n_head = 4, n_embd = 208,
+    n_layer = 6, n_head = 6, n_embd = 384,
     dropout = 0,
     bias = bias,
 )
