@@ -1,19 +1,17 @@
 """
 ariannamethod — notorch + Chuck Optimizer
 
-Two lines, one purpose:
+C line:  notorch.c / notorch.h (pure C neural framework)
+Python:  notorch_nn.py (ctypes binding to libnotorch)
+         chuck.py (self-aware optimizer via ctypes)
 
-  C line:    notorch.c / notorch.h / gguf.c / gguf.h / lee.c
-             Pure C neural network framework. No Python. No pip. No tears.
-             Build: cc notorch.c -o notorch -lm
-
-  Python line: chuck.py
-               Chuck Optimizer — self-aware AdamW replacement.
-               Drop-in for torch.optim.AdamW with 9 levels of awareness.
-
-Resonance is unbroken.
+no torch. no pip install torch. no 2.7 GB.
 """
 
-from .chuck import ChuckOptimizer, ChuckMonitor, ChuckMemory, chuck_params
+from .notorch_nn import *
+from .chuck import ChuckOptimizer
 
-__all__ = ['ChuckOptimizer', 'ChuckMonitor', 'ChuckMemory', 'chuck_params']
+__all__ = ['Tensor', 'Parameter', 'Module', 'Linear', 'Embedding',
+           'RMSNorm', 'NotorchEngine', 'softmax', 'silu', 'cross_entropy',
+           'multinomial', 'seed', 'ChuckOptimizer',
+           '_lib', '_get_tensor_struct', '_NtTapeEntry', '_NtTensor']
