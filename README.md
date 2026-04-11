@@ -12,22 +12,21 @@
 
 forked from [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT). PyTorch removed. Adam replaced by [Chuck](https://github.com/ariannamethod/chuck.optimizer). trained on Dracula instead of Shakespeare. because enough fairy tales.
 
-## two versions, one truth
+## model
 
-| | v1 (Copilot) | v2 (notorch C) |
-|---|---|---|
-| params | 2.1M | **10.2M** |
-| dim | 208 | **320** |
-| layers | 4 | **8** |
-| heads | 4 | **8** |
-| ctx | 128 | **256** |
-| train loss | 1.32 | **0.79** |
-| val loss | 1.41 | **1.34** |
-| time | 28.5 min | 5.6 hours |
-| runtime | Python + notorch shim | **pure C** |
-| PyTorch | shim (no torch.nn) | **zero** |
+| | |
+|---|---|
+| params | **10.2M** |
+| dim | 320 |
+| layers | 8 |
+| heads | 8 |
+| ctx | 256 |
+| train loss | **0.79** |
+| val loss | **1.34** |
+| time | 5.6 hours (8 GB Mac) |
+| PyTorch | **zero** |
 
-## generation (10.2M, pure C, trained on Dracula)
+## generation (10.2M, trained on Dracula)
 
 ```
 "My dear friend," said the Count, "He got out to be one paper with me. I
